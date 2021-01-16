@@ -17,7 +17,7 @@ Public Module GlobalFilenameVariables
     Public EXLreportsLoc As String = UserLogged & "\Lehan Drugs\HME Tactical Team - Error Form Follow Up and Reports\Error Coaching Reports\Excel Reports\"
     Public Path_Datestamp As String = (backupLoc & "\" & Datestamp)
     Public excel_ERR_workbook_filename As String = Path_Datestamp & "\Oops I Did It again (2.0).xlsx"
-    Public excel_TMP_workbook_filename As String = Path_Datestamp & "\ErrorReportFormTemplate.xlsm"
+    Public excel_TMP_workbook_filename As String = Path_Datestamp & "\ErrorReportFormTemplate_CriticalError.xlsm"
     '
 
 End Module
@@ -42,7 +42,7 @@ Public Class frmMain
         'My.Computer.FileSystem.CreateDirectory(Path_Datestamp.Replace("Excel Reports", "Published PDF Reports"))
         'My.Computer.FileSystem.CreateDirectory(EXLreportsLoc)
         My.Computer.FileSystem.CopyFile(strPath & "\Oops I Did It again (2.0).xlsx", Path_Datestamp & "\Oops I Did It again (2.0).xlsx")
-        My.Computer.FileSystem.CopyFile(strPath & "\ErrorReportAutomation\ErrorReportFormTemplate.xlsm", Path_Datestamp & "\ErrorReportFormTemplate.xlsm")
+        My.Computer.FileSystem.CopyFile(strPath & "\ErrorReportAutomation\ErrorReportFormTemplate_CriticalError.xlsm", Path_Datestamp & "\ErrorReportFormTemplate_CriticalError.xlsm")
         'My.Computer.FileSystem.CopyDirectory(strPath, Path_Datestamp, False)
 
 
@@ -488,16 +488,27 @@ SKIP_TEMPLATE:
                     System.IO.Directory.CreateDirectory(finalFileName)
                 End If
 
+                If (Not System.IO.Directory.Exists(finalFileName.Replace("Excel Reports", "Published PDF Reports"))) Then
+                    System.IO.Directory.CreateDirectory(finalFileName.Replace("Excel Reports", "Published PDF Reports"))
+                End If
 
+
+                If (Not System.IO.Directory.Exists(finalFileName.Replace("Excel Reports", "Published PDF Reports") & "UnCrt\")) Then
+                    Directory.CreateDirectory(finalFileName.Replace("Excel Reports", "Published PDF Reports") & "UnCrt\")    ' Creates a new directory with the current date as the folder name
+                End If
 
 
                 'Create Individual File
                 reportType_Val = "CriticalError"
+                excel_error_log_wrksheet.Range("SeatGroup_ErrorReport").Value = ""
                 excel_error_log_wrksheet.Range("CriticalErrorLookupVal_ErrorReport").Value = emp_names(i_emp_name_1)
                 excel_error_log_wrksheet.Range("Error_ReportType").Value = reportType_Val
                 xl_app.Calculate()
-                finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_Name").Value
-                finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_FileNameAddition").Value & ".xlsm"
+                finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_FileNameAddition").Value & " - "
+                finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_Name").Value & " - Critical Error Report - "
+                finalFileName = finalFileName & Format(Now(), "hh_mm_ss_tt") & ".xlsm"
+                'finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_Name").Value
+                'finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_FileNameAddition").Value & ".xlsm"
                 OpenExcelWorkbook_ReportTemplate(selected_id, excel_TMP_workbook_filename, excel_workbook, excel_error_log_wrksheet, finalFileName, xl_app, reportType_Val)
 
                 'Dim inputString As String = "10000"
@@ -861,6 +872,8 @@ SKIP_TEMPLATE:
         If (Not System.IO.Directory.Exists(replacment_folder_name.Replace("Excel Reports", "Published PDF Reports"))) Then
             Directory.CreateDirectory(replacment_folder_name.Replace("Excel Reports", "Published PDF Reports"))    ' Creates a new directory with the current date as the folder name
         End If
+
+
         new_folder = folder & str_cur_date & "\"    ' Saves the new folder path
 
         Return new_folder
