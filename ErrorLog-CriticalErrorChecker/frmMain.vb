@@ -1,6 +1,10 @@
 ﻿Imports Microsoft.Office.Interop
-Imports System.Net.Mail
+'Imports System.Net.Mail
 Imports System.IO
+Imports MailKit
+Imports MimeKit
+Imports MailKit.Net.Smtp
+Imports MailKit.Net.Imap
 
 Public Module GlobalFilenameVariables
 
@@ -18,20 +22,23 @@ Public Module GlobalFilenameVariables
     Public Path_Datestamp As String = (backupLoc & "\" & Datestamp)
     Public excel_ERR_workbook_filename As String = Path_Datestamp & "\Oops I Did It again (2.0).xlsx"
     Public excel_TMP_workbook_filename As String = Path_Datestamp & "\ErrorReportFormTemplate_CriticalError.xlsm"
+
+    'Email Variables
+    Public settingsFile() As String
+    Public setting_SMTPserver As String
+    Public setting_Port As Integer
+    Public setting_SendFromAddress As String
+    Public setting_CredentialsUsername As String
+    Public setting_CredentialsPassword As String
+    Public emailSettingsTxtFile As String = (UserLogged & "\" & "Lehan Drugs\HME Tactical Team - Error Form Follow Up and Reports\ErrorReportAutomation\Credentials.txt")
+
     '
 
 End Module
 Public Class frmMain
     Private Sub Main_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        GatherEmailCredentials()
 
-
-
-
-
-
-
-
-        '
 
         'SendErrorEmail("Test Error Email")'TESTING
 
@@ -153,7 +160,7 @@ Public Class frmMain
         'Read in completed ID text file
         Dim textFileLoc As String = completedIDsTextFileLoc
         Dim completedIDs() As String                   ' Contains the row count
-        completedIDs = IO.File.ReadAllLines(textFileLoc)
+        completedIDs = System.IO.File.ReadAllLines(textFileLoc)
 
         xl_app.Calculation = Excel.XlCalculation.xlCalculationManual
         For col_i As Integer = 6 To 6
@@ -1006,41 +1013,80 @@ SKIP_TEMPLATE:
     '    'MsgBox(st)
     'End Sub
     Private Sub SendErrorEmail(ByVal EmailText As String)
+
         Try
-            Dim smtp_server As New SmtpClient
-            Dim email As New MailMessage()
-            Dim sender As String = "bot@vortechsolutions.com"
-            Dim pw As String = "hYtYWTkrF5#onvhSFDGCe4AiHPM26V"
-            'Dim sender As String = "vortechbot@lehandrugs.com"
-            'Dim pw As String = "Lehan2020!"
-            'Dim recipient As String = "dennis@vortechsolutions.com"
-            Dim CCrecipient As String = "tim@vortechsolutions.com"
-            'Dim recipient As String = "tim@vortechsolutions.com;Mike@LehanDrugs.com"
-            Dim recipient1 As String = "tim@vortechsolutions.com"
-            'Dim recipient2 As String = "Mike@LehanDrugs.com"
 
-            smtp_server.UseDefaultCredentials = False
-            smtp_server.Credentials = New Net.NetworkCredential(sender, pw)
-            smtp_server.Port = 587
-            smtp_server.EnableSsl = True
-            smtp_server.Host = "smtp.office365.com"
+            Dim mail As New MimeMessage()
+            mail.From.Add(New MailboxAddress("Vortech Bot", setting_SendFromAddress))
+            mail.To.Add(New MailboxAddress("", "tim@vortechsolutions.com"))
+            mail.Subject = "Error Log Automation Error - " & Date.Now
+            Dim sText As New TextPart("plain")
+            sText.SetText("UTF-8", EmailText)
+            mail.Body = sText
 
-            email.From = New MailAddress(sender)
-            email.To.Add(recipient1)
-            'email.To.Add(recipient2)
-            email.CC.Add(CCrecipient)
-            email.Subject = "Error Log Automation Error - " & Date.Now
-            email.IsBodyHtml = False
-            email.Body = EmailText
-
-            smtp_server.Send(email)
-
-            smtp_server.Dispose()
-
-        Catch error_t As Exception
-            MsgBox(error_t.ToString)
+            Using smtp = New SmtpClient()
+                smtp.Connect(setting_SMTPserver, setting_Port, True)
+                smtp.Authenticate(setting_CredentialsUsername, setting_CredentialsPassword)
+                smtp.Send(mail)
+                smtp.Disconnect(True)
+            End Using
+        Catch ex As Exception
+            MsgBox(ex.ToString)
         End Try
 
-    End Sub
 
+
+        'Try
+        '    Dim smtp_server As New SmtpClient
+        '    Dim email As New MailMessage()
+        '    Dim sender As String = "bot@vortechsolutions.com"
+        '    Dim pw As String = "hYtYWTkrF5#onvhSFDGCe4AiHPM26V"
+        '    'Dim sender As String = "vortechbot@lehandrugs.com"
+        '    'Dim pw As String = "Lehan2020!"
+        '    'Dim recipient As String = "dennis@vortechsolutions.com"
+        '    Dim CCrecipient As String = "tim@vortechsolutions.com"
+        '    'Dim recipient As String = "tim@vortechsolutions.com;Mike@LehanDrugs.com"
+        '    Dim recipient1 As String = "tim@vortechsolutions.com"
+        '    'Dim recipient2 As String = "Mike@LehanDrugs.com"
+
+        '    smtp_server.UseDefaultCredentials = False
+        '    smtp_server.Credentials = New Net.NetworkCredential(sender, pw)
+        '    smtp_server.Port = 587
+        '    smtp_server.EnableSsl = True
+        '    smtp_server.Host = "smtp.office365.com"
+
+        '    email.From = New MailAddress(sender)
+        '    email.To.Add(recipient1)
+        '    'email.To.Add(recipient2)
+        '    email.CC.Add(CCrecipient)
+        '    email.Subject = "Error Log Automation Error - " & Date.Now
+        '    email.IsBodyHtml = False
+        '    email.Body = EmailText
+
+        '    smtp_server.Send(email)
+
+        '    smtp_server.Dispose()
+
+        'Catch error_t As Exception
+        '    'MsgBox(error_t.ToString)
+        'End Try
+
+    End Sub
+    Sub GatherEmailCredentials()
+        settingsFile = System.IO.File.ReadAllLines(emailSettingsTxtFile)
+        For row_i = 2 To settingsFile.Length() + 1
+            'set variables for emails
+            If row_i = 2 Then
+                setting_SMTPserver = settingsFile(row_i - 2)
+            ElseIf row_i = 3 Then
+                setting_Port = settingsFile(row_i - 2)
+            ElseIf row_i = 4 Then
+                setting_SendFromAddress = settingsFile(row_i - 2)
+            ElseIf row_i = 5 Then
+                setting_CredentialsUsername = settingsFile(row_i - 2)
+            ElseIf row_i = 6 Then
+                setting_CredentialsPassword = settingsFile(row_i - 2)
+            End If
+        Next row_i
+    End Sub
 End Class
