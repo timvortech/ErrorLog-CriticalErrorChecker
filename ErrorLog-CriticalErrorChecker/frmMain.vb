@@ -95,7 +95,7 @@ Public Class frmMain
 
             ' Opens an excel application
             xl_error_log_wrksheet_name = "ErrorReporter"
-        xl_support_wrksheet_name = "CriticalErrorSupport"
+        xl_support_wrksheet_name = "GALASupport"
         xl_app = New Excel.Application()
 
 
@@ -489,7 +489,7 @@ SKIP_TEMPLATE:
 
                 'leadDirName = output_folder
                 'finalFileName = output_folder & excel_error_log_wrksheet.Range("CriticalErrorLeadDirectory_ErrorReport").Value & "\Critical_Error_Reports\"
-                finalFileName = output_folder & "Critical_Error_Reports\"
+                finalFileName = output_folder & "GALA_Reports\"
 
                 If (Not System.IO.Directory.Exists(finalFileName)) Then
                     System.IO.Directory.CreateDirectory(finalFileName)
@@ -512,7 +512,7 @@ SKIP_TEMPLATE:
                 excel_error_log_wrksheet.Range("Error_ReportType").Value = reportType_Val
                 xl_app.Calculate()
                 finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_FileNameAddition").Value & " - "
-                finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_Name").Value & " - Critical Error Report - "
+                finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_Name").Value & " - GALA Report - "
                 finalFileName = finalFileName & Format(Now(), "hh_mm_ss_tt") & ".xlsm"
                 'finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_Name").Value
                 'finalFileName = finalFileName & excel_error_log_wrksheet.Range("Error_FileNameAddition").Value & ".xlsm"
@@ -1019,7 +1019,7 @@ SKIP_TEMPLATE:
             Dim mail As New MimeMessage()
             mail.From.Add(New MailboxAddress("Vortech Bot", setting_SendFromAddress))
             mail.To.Add(New MailboxAddress("", "tim@vortechsolutions.com"))
-            mail.Subject = "Error Log Automation Error - " & Date.Now
+            mail.Subject = "Error Log - G.A.L.A Checker - " & Date.Now
             Dim sText As New TextPart("plain")
             sText.SetText("UTF-8", EmailText)
             mail.Body = sText
