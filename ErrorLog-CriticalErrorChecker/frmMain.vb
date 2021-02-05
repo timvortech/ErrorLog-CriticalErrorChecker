@@ -525,9 +525,9 @@ SKIP_TEMPLATE:
                     writer.WriteLine(selected_id)
                 End Using
 
-                Using writer As New StreamWriter(reportTrackingTextFileLoc, True)
-                    writer.WriteLine(Now() & vbTab & "CriticalError" & vbTab & selected_id & vbTab & "1" & vbTab & "0" & vbTab & "0")
-                End Using
+                'Using writer As New StreamWriter(reportTrackingTextFileLoc, True)
+                '    writer.WriteLine(Now() & vbTab & "CriticalError" & vbTab & selected_id & vbTab & "1" & vbTab & "0" & vbTab & "0")
+                'End Using
 
 
 
